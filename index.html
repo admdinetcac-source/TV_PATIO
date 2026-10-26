@@ -1,0 +1,270 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TV PATIO - Rotador Power BI</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: Arial, sans-serif;
+    }
+
+    /* CONTENEDOR PRINCIPAL */
+    .tv-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+
+    /* VIDEO FLOTANTE: MISMO VIDEO DEL CÓDIGO CAC */
+    .video-flotante {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 220px;
+      height: 80px;
+      z-index: 9999;
+      background: #072040;
+      overflow: hidden;
+      border-bottom-left-radius: 14px;
+      box-shadow: -4px 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .video-flotante video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* CONTENIDO DE LAS 6 PANTALLAS */
+    .contenido {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+
+    .visor-powerbi,
+    .visor-imagen {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      object-fit: contain;
+      background: #000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.6s ease;
+    }
+
+    .activo {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* INDICADORES DE ROTACIÓN */
+    .dots {
+      position: fixed;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 9998;
+      pointer-events: none;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.4);
+    }
+
+    .dot.activo {
+      background: #0ea5e9;
+      box-shadow: 0 0 8px #0ea5e9;
+    }
+
+    /* BARRA DE PROGRESO */
+    .barra-progreso {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      width: 0;
+      background: #0ea5e9;
+      z-index: 10000;
+    }
+
+    @media (max-width: 600px) {
+      .video-flotante {
+        width: 150px;
+        height: 60px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- VIDEO FLOTANTE PERMANENTE -->
+  <div class="video-flotante">
+    <video autoplay muted loop playsinline>
+      <source src="VIDEO_TV.mp4" type="video/mp4">
+    </video>
+  </div>
+
+  <!-- CONTENIDO DEL ROTADOR -->
+  <div class="tv-wrapper">
+    <div class="contenido">
+
+      <iframe
+        id="visorPowerBI"
+        class="visor-powerbi activo"
+        title="Panel Power BI"
+        allowfullscreen>
+      </iframe>
+
+      <img
+        id="visorImagen"
+        class="visor-imagen"
+        alt="Imagen informativa">
+
+    </div>
+  </div>
+
+  <!-- INDICADORES -->
+  <div class="dots" id="dots"></div>
+  <div class="barra-progreso" id="barraProgreso"></div>
+
+  <script>
+    /* =========================================
+       CONFIGURACIÓN DEL ROTADOR
+       4 PÁGINAS POWER BI + 2 IMÁGENES
+    ========================================= */
+
+    const contenidos = [
+      {
+        tipo: "powerbi",
+        nombre: "Power BI 1",
+        url: "https://app.powerbi.com/view?r=eyJrIjoiZTZiZWQzZmEtZTU5Yi00YWQxLWI0MDQtZTc3MTFkY2QxODllIiwidCI6IjhiNThmMjM4LWFmOGEtNDE3Ny1hM2U0LTg3YTllY2YxMGRkMyIsImMiOjR9&pageName=35c4fd5766c32d30f8d8"
+      },
+      {
+        tipo: "powerbi",
+        nombre: "Power BI 2",
+        url: "https://app.powerbi.com/view?r=eyJrIjoiOTMwMTdhMTktMTc1Yi00YWZiLWFmMDQtZDBmMWM0NTc2M2MzIiwidCI6IjhiNThmMjM4LWFmOGEtNDE3Ny1hM2U0LTg3YTllY2YxMGRkMyIsImMiOjR9&pageName=f118e689bdc656278525"
+      },
+      {
+        tipo: "powerbi",
+        nombre: "Power BI 3",
+        url: "https://app.powerbi.com/view?r=eyJrIjoiOTMwMTdhMTktMTc1Yi00YWZiLWFmMDQtZDBmMWM0NTc2M2MzIiwidCI6IjhiNThmMjM4LWFmOGEtNDE3Ny1hM2U0LTg3YTllY2YxMGRkMyIsImMiOjR9&pageName=caa5a2d30163542bfc0f"
+      },
+      {
+        tipo: "powerbi",
+        nombre: "Power BI 4",
+        url: "https://app.powerbi.com/view?r=eyJrIjoiOTMwMTdhMTktMTc1Yi00YWZiLWFmMDQtZDBmMWM0NTc2M2MzIiwidCI6IjhiNThmMjM4LWFmOGEtNDE3Ny1hM2U0LTg3YTllY2YxMGRkMyIsImMiOjR9&pageName=da9e1770d3cdc6af9935"
+      },
+      {
+        tipo: "imagen",
+        nombre: "Imagen 1",
+        url: "Captura%20de%20pantalla%202026-10-26%20110459.png"
+      },
+      {
+        tipo: "imagen",
+        nombre: "Imagen 2",
+        url: "Captura%20de%20pantalla%202026-10-26%20110544.png"
+      }
+    ];
+
+    /* 40 SEGUNDOS POR PANTALLA */
+    const DURACION = 40 * 1000;
+
+    const iframe = document.getElementById("visorPowerBI");
+    const imagen = document.getElementById("visorImagen");
+    const barra = document.getElementById("barraProgreso");
+    const dots = document.getElementById("dots");
+
+    let indice = 0;
+    let temporizador = null;
+
+    /* CREAR INDICADORES */
+    contenidos.forEach((contenido, i) => {
+      const punto = document.createElement("div");
+      punto.className = "dot" + (i === 0 ? " activo" : "");
+      punto.title = contenido.nombre;
+      dots.appendChild(punto);
+    });
+
+    function mostrarContenido(i) {
+      const actual = contenidos[i];
+
+      console.log("Mostrando:", actual.nombre);
+
+      if (actual.tipo === "powerbi") {
+        imagen.classList.remove("activo");
+
+        if (iframe.dataset.url !== actual.url) {
+          iframe.src = actual.url;
+          iframe.dataset.url = actual.url;
+        }
+
+        iframe.classList.add("activo");
+
+      } else {
+        iframe.classList.remove("activo");
+
+        if (imagen.getAttribute("src") !== actual.url) {
+          imagen.src = actual.url;
+        }
+
+        imagen.alt = actual.nombre;
+        imagen.classList.add("activo");
+      }
+
+      /* ACTUALIZAR INDICADORES */
+      document.querySelectorAll(".dot").forEach((dot, j) => {
+        dot.classList.toggle("activo", j === i);
+      });
+
+      /* REINICIAR BARRA DE PROGRESO */
+      barra.style.transition = "none";
+      barra.style.width = "0%";
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          barra.style.transition = `width ${DURACION}ms linear`;
+          barra.style.width = "100%";
+        });
+      });
+
+      /* PROGRAMAR SIGUIENTE PANTALLA */
+      clearTimeout(temporizador);
+
+      temporizador = setTimeout(() => {
+        indice = (indice + 1) % contenidos.length;
+        mostrarContenido(indice);
+      }, DURACION);
+    }
+
+    /* INICIAR */
+    mostrarContenido(indice);
+  </script>
+
+</body>
+</html>
