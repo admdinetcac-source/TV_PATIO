@@ -1,124 +1,182 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <title>Power BI Rotador TV</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TV PATIO - Rotador Power BI</title>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     html, body {
       margin: 0;
+      width: 100%;
       height: 100%;
-      background: black;
       overflow: hidden;
+      background: #000;
+      font-family: Arial, sans-serif;
     }
 
-    /* ===== CONTENEDOR GENERAL ===== */
     .contenedor {
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
-      width: 100%;
-      height: 100%;
     }
 
-    /* ===== VIDEO ===== */
+    /* VIDEO FLOTANTE SUPERIOR */
     .zona-video {
-      width: 100%;
+      position: relative;
+      z-index: 2;
       height: 15%;
-      background: #072040;
+      flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: flex-start;
+      overflow: hidden;
+      background: #072040;
     }
 
     .zona-video video {
       height: 100%;
       width: auto;
+      max-width: 100%;
       object-fit: contain;
     }
 
-    /* ===== POWER BI ===== */
-    .zona-web {
+    /* CONTENIDO PRINCIPAL */
+    .zona-contenido {
+      position: relative;
+      flex: 1;
+      min-height: 0;
       width: 100%;
-      height: 85%;
+      background: #000;
+      overflow: hidden;
     }
 
-    iframe {
+    .visor {
+      display: block;
       width: 100%;
       height: 100%;
       border: none;
-      display: block;
+      background: #000;
     }
 
-    /* pixel invisible para evitar standby */
-    #keepAlive {
-      position: fixed;
-      width: 1px;
-      height: 1px;
-      opacity: 0.02;
-      top: 0;
-      left: 0;
+    .imagen {
+      display: none;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
     }
   </style>
 </head>
 
 <body>
+  <div class="contenedor">
 
-<div class="contenedor">
+    <!-- VIDEO RRHH PERMANENTE -->
+    <div class="zona-video">
+      <video autoplay muted loop playsinline>
+        <source src="RRHH.mp4" type="video/mp4">
+      </video>
+    </div>
 
-  <!-- VIDEO EN LOOP -->
-  <div class="zona-video">
-    <video autoplay muted loop playsinline>
-      <source src="VIDEO_TV.mp4" type="video/mp4">
-    </video>
+    <!-- ROTADOR DE POWER BI E IMÁGENES -->
+    <div class="zona-contenido">
+
+      <iframe
+        id="visorPowerBI"
+        class="visor"
+        title="Panel de Power BI"
+        allowfullscreen>
+      </iframe>
+
+      <img
+        id="imagenRotador"
+        class="imagen"
+        alt="Imagen informativa 1">
+
+    </div>
   </div>
 
-  <!-- POWER BI -->
-  <div class="zona-web">
-    <iframe id="visor"></iframe>
-  </div>
+  <script>
+    // 4 PÁGINAS DE POWER BI
+    const contenidos = [
+      {
+        tipo: "powerbi",
+        nombre: "Power BI 1",
+        url: "https://app.powerbi.com/view?r=eyJrIjoiZTZiZWQzZmEtZTU5Yi00YWQxLWI0MDQtZTc3MTFkY2QxODllIiwidCI6IjhiNThmMjM4LWFmOGEtNDE3Ny1hM2U0LTg3YTllY2YxMGRkMyIsImMiOjR9&pageName=35c4fd5766c32d30f8d8"
+      },
+      {
+        tipo: "powerbi",
+        nombre: "Power BI 2",
+        url: "https://app.powerbi.com/view?r=eyJrIjoiOTMwMTdhMTktMTc1Yi00YWZiLWFmMDQtZDBmMWM0NTc2M2MzIiwidCI6IjhiNThmMjM4LWFmOGEtNDE3Ny1hM2U0LTg3YTllY2YxMGRkMyIsImMiOjR9&pageName=f118e689bdc656278525"
+      },
+      {
+        tipo: "powerbi",
+        nombre: "Power BI 3",
+        url: "https://app.powerbi.com/view?r=eyJrIjoiOTMwMTdhMTktMTc1Yi00YWZiLWFmMDQtZDBmMWM0NTc2M2MzIiwidCI6IjhiNThmMjM4LWFmOGEtNDE3Ny1hM2U0LTg3YTllY2YxMGRkMyIsImMiOjR9&pageName=caa5a2d30163542bfc0f"
+      },
+      {
+        tipo: "powerbi",
+        nombre: "Power BI 4",
+        url: "https://app.powerbi.com/view?r=eyJrIjoiOTMwMTdhMTktMTc1Yi00YWZiLWFmMDQtZDBmMWM0NTc2M2MzIiwidCI6IjhiNThmMjM4LWFmOGEtNDE3Ny1hM2U0LTg3YTllY2YxMGRkMyIsImMiOjR9&pageName=da9e1770d3cdc6af9935"
+      },
 
-</div>
+      // IMAGEN 1 DEL REPOSITORIO
+      {
+        tipo: "imagen",
+        nombre: "Imagen 1",
+        url: "Captura%20de%20pantalla%202026-10-26%20110459.png"
+      },
 
-<div id="keepAlive"></div>
+      // IMAGEN 2 DEL REPOSITORIO
+      {
+        tipo: "imagen",
+        nombre: "Imagen 2",
+        url: "Captura%20de%20pantalla%202026-10-26%20110544.png"
+      }
+    ];
 
-<script>
-  /* =====================================================
-     POWER BI
-  ====================================================== */
-  const baseUrl =
-    "https://app.powerbi.com/view?r=eyJrIjoiMzVlMjliYzUtYzczZC00YmRiLWI3NTItODNlMzJiMDQ1YTljIiwidCI6IjhiNThmMjM4LWFmOGEtNDE3Ny1hM2U0LTg3YTllY2YxMGRkMyIsImMiOjR9";
+    // 40 SEGUNDOS POR CONTENIDO
+    const INTERVALO = 40000;
 
-  // Páginas reales
-  const pages = [
-    { nombre: "Recepción", page: "ReportSection" },
-    { nombre: "Almacén", page: "ReportSection2f86aeeb75c534071118" },
-    { nombre: "Despacho", page: "ReportSectioncd1ef873182e170dc05d" }
-  ];
+    const visor = document.getElementById("visorPowerBI");
+    const imagen = document.getElementById("imagenRotador");
 
-  const INTERVALO_SEGUNDOS = 10;
-  const iframe = document.getElementById("visor");
-  const keepAlive = document.getElementById("keepAlive");
-  let index = 0;
-  function cambiarPagina() {
-    iframe.src = baseUrl + "&pageName=" + pages[index].page;
-    console.log("Mostrando:", pages[index].nombre);
-    index = (index + 1) % pages.length;
-  }
+    let indice = 0;
 
-  /* =====================================================
-     ANTI-INACTIVIDAD TV LG
-  ====================================================== */
-  function evitarApagado() {
-    keepAlive.style.opacity =
-      keepAlive.style.opacity === "0.02" ? "0.03" : "0.02";
-    window.dispatchEvent(new Event("mousemove"));
-    window.dispatchEvent(new Event("keydown"));
-  }
-  // cada 5 minutos
-  setInterval(evitarApagado, 5 * 60 * 1000);
-  /* =====================================================
-     INICIO
-  ====================================================== */
-  cambiarPagina();
-  setInterval(cambiarPagina, INTERVALO_SEGUNDOS * 1000);
+    function mostrarContenido() {
+      const actual = contenidos[indice];
+
+      console.log("Mostrando:", actual.nombre);
+
+      if (actual.tipo === "powerbi") {
+        imagen.style.display = "none";
+        visor.style.display = "block";
+
+        if (visor.src !== actual.url) {
+          visor.src = actual.url;
+        }
+      } else {
+        visor.style.display = "none";
+        imagen.style.display = "block";
+        imagen.src = actual.url;
+        imagen.alt = actual.nombre;
+      }
+
+      indice = (indice + 1) % contenidos.length;
+    }
+
+    // INICIAR ROTACIÓN
+    mostrarContenido();
+    setInterval(mostrarContenido, INTERVALO);
+  </script>
+</body>
+</html>
+
